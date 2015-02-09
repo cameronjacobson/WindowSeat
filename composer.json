@@ -1,0 +1,13 @@
+{
+	"name":"windowseat/windowseat",
+    "require": {
+        "php": ">=5.4.0",
+        "ext-event": "*",
+		"mtdowling/transducers": "@dev"
+    },
+	"autoload": {
+		"psr-0": {
+			"WindowSeat": "src/"
+		}
+	}
+}
