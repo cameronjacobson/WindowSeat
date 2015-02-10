@@ -13,8 +13,8 @@ class EventHandler implements EventHandlerInterface
 	public function handle(EventInterface $event){
 		$this->sendToErrorLog($event->getEvent());
 	}
-	public function createEvent(){
-		return new Event();
+	public function createEvent($data = null){
+		return new Event($data);
 	}
 	private function sendToErrorLog($data){
 		error_log(var_export($data,true));

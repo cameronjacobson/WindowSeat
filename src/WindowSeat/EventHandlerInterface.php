@@ -7,5 +7,6 @@ use \WindowSeat\EventInterface;
 interface EventHandlerInterface
 {
 	public function handle(EventInterface $event);
-	public function createEvent();
+
+	public function createEvent($data = null);
 }

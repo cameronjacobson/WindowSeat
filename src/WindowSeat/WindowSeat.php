@@ -17,9 +17,21 @@ class WindowSeat
 	private $config;
 	private $connection;
 	private $request;
+	private $instructions;
+	public $dnsbase;
 
 	public function __construct(CouchConfig $config){
 		$this->config = $config;
+		$this->instructions = $config->getInstructions();
+	}
+	public function getConfig(){
+		return $this->config;
+	}
+	public function getInstructions(){
+		return $this->instructions;
+	}
+	public function getEventHandler(){
+		return $this->eventHandler;
 	}
 
 	public function setEventHandler(EventHandlerInterface $eh){
@@ -30,6 +42,7 @@ class WindowSeat
 		$this->dnsbase = new EventDnsBase($this->config->getBase(),true);
 		$this->connect();
 	}
+
 	private function connect(){
 		$this->bev = new EventBufferEvent(
 			$this->config->getBase(),
@@ -55,35 +68,57 @@ class WindowSeat
 		$this->bev->connectHost($this->dnsbase,$this->config->getHost(),$this->config->getPort(),EventUtil::AF_UNSPEC);
 	}
 
-	public function writecb($bev,$base){}
+	public function writecb($bev,$base){
+	}
 
-	public function eventcb($bev,$events,$base){}
+	public function eventcb($bev,$events,$base){
+		if(EventBufferEvent::READING & $events){
+		}
+		if(EventBufferEvent::WRITING & $events){
+		}
+		if(EventBufferEvent::EOF & $events){
+		}
+		if(EventBufferEvent::ERROR & $events){
+			error_log('ERROR: WindowSeat\CouchWorker '.EventUtil::getLastSocketError(),' '.EventUtil::getLastSocketErrno());
+		}
+		if(EventBufferEvent::TIMEOUT & $events){
+		}
+		if(EventBufferEvent::CONNECTED & $events){
+		}
+	}
 
 	public function readcb($bev,$base){
 		$buf = $bev->getInput();
-		while($data = $buf->readLine(EventBuffer::EOL_ANY)){
-error_log(trim($data));
-			if($json = json_decode($data,true)){
-				if(isset($json['last_seq'])){
-error_log('last seq reached');
-					$this->last_seq = $json['last_seq'];
+		while($data = trim($buf->readLine(EventBuffer::EOL_ANY))){
+			if($parsed = json_decode($data,true)){
+				if(isset($parsed['last_seq'])){
+					$this->last_seq = $parsed['last_seq'];
 					$this->bev->free();
 					$this->connect();
 				}
+				else if(isset($parsed['seq'])){
+					if($this->instructions['retrieve_docs']){
+						$worker = new CouchWorker($parsed,$this);
+						$worker->retrieveDoc();
+					}
+					else{
+						$ev = $this->eventHandler->createEvent(
+							$this->instructions['parse_json'] ? $json : $data
+						);
+						$this->dispatchEvent($ev);
+					}
+				}
 				else{
-echo $data.PHP_EOL;
-					$ev = $this->eventHandler->createEvent(trim($data));
-					$this->dispatchEvent($ev);
+					// debugging only.
 				}
 			}
 			else{
-				// for debugging only.
-				//  nothing interesting here
+				// debugging only.
 			}
 		}
 	}
 
-	private function dispatchEvent(EventInterface $event){
+	public function dispatchEvent(EventInterface $event){
 		$this->eventHandler->handle($event);
 	}
 

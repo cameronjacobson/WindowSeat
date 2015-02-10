@@ -25,9 +25,18 @@ class CouchConfig
 	public function getPort(){
 		return $this->config['port'];
 	}
+
+	public function getInstructions(){
+		return array(
+			'parse_json'=> $this->config['parse_json'] ?: false,
+			'retrieve_docs'=> $this->config['retrieve_docs'] ?: false,
+		);
+	}
+
 	public function getDbName(){
 		return $this->config['dbname'];
 	}
+
 	public function &getBase(){
 		return $this->base;
 	}
