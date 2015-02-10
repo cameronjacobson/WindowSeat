@@ -95,7 +95,7 @@ class CouchWorker
 
 	public function dispatch($event){
 		$ev = $this->ws->getEventHandler()->createEvent(
-			$this->ws->getInstructions()['parse_json'] ? json_decode($event) : $event
+			$this->ws->getInstructions()['parse_json'] ? json_decode($event,true) : $event
 		);
 		$this->ws->dispatchEvent($ev);
 		$this->__destruct();
