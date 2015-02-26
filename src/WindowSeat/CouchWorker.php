@@ -94,22 +94,33 @@ class CouchWorker
 		$this->bev->connectHost($this->ws->dnsbase,$this->ws->getConfig()->getHost(),$this->ws->getConfig()->getPort(),EventUtil::AF_UNSPEC);
 	}
 
+	public function dispatchThaw($event){
+		if(empty($event['id'])){
+			return;
+		}
+		$cb = function($obj){
+			$ev = $this->ws->getEventHandler()->createEvent($obj);
+			$this->ws->dispatchEvent($ev);
+			$this->__destruct();
+		};
+		$cb->bindTo($this);
+		$couchdb = $this->ws->couchdb->getContext();
+		try{
+			$couchdb->fetch($event['id'], $cb);
+		}
+		catch(\Exception $e){
+			error_log($e->getMessage());
+		}
+		return;
+	}
+
 	public function dispatch($event){
-		$instructions = $this->ws->getInstructions();
-		if($instructions['thaw'])
-			$event = json_decode($event,true);
-			$frozenObject = [
-				'root'=>$event['_id'],
-				'objects'=>[$event['_id']=>$event]
-			];
-			$object = Phreezer->thaw($frozenObject);
-			$ev = $this->ws->getEventHandler()->createEvent($object);
+		if(empty($event)){
+			return;
 		}
-		else{
-			$ev = $this->ws->getEventHandler()->createEvent(
-				$instructions['parse_json'] ? json_decode($event,true) : $event
-			);
-		}
+		$ev = $this->ws->getEventHandler()->createEvent(
+			$instructions['parse_json'] ? json_decode($event,true) : $event
+		);
 		$this->ws->dispatchEvent($ev);
 		$this->__destruct();
 	}

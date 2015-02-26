@@ -9,6 +9,7 @@ use \EventBufferEvent;
 use \EventDnsBase;
 use \Event;
 use \EventUtil;
+use \Phreezer\Storage\CouchDB;
 
 class WindowSeat
 {
@@ -23,6 +24,14 @@ class WindowSeat
 	public function __construct(CouchConfig $config){
 		$this->config = $config;
 		$this->instructions = $config->getInstructions();
+		if(!empty($this->instructions['thaw'])){
+			$this->couchdb = new CouchDB([
+				'host'=>$this->config->getHost(),
+				'database'=>$this->config->getDbName(),
+				'port'=>$this->config->getPort(),
+				'base'=>$this->config->getBase()
+			]);
+		}
 	}
 	public function getConfig(){
 		return $this->config;
@@ -91,6 +100,9 @@ class WindowSeat
 		$buf = $bev->getInput();
 		while($data = trim($buf->readLine(EventBuffer::EOL_ANY))){
 			if($parsed = json_decode($data,true)){
+				if(!empty($parsed['_deleted'])){
+					continue;
+				}
 				if(isset($parsed['last_seq'])){
 					$this->last_seq = $parsed['last_seq'];
 					$this->bev->free();
@@ -100,6 +112,10 @@ class WindowSeat
 					if($this->instructions['retrieve_docs']){
 						$worker = new CouchWorker($parsed,$this);
 						$worker->retrieveDoc();
+					}
+					else if($this->instructions['thaw']){
+						$worker = new CouchWorker($parsed,$this);
+						$worker->dispatchThaw($parsed);
 					}
 					else{
 						$ev = $this->eventHandler->createEvent(

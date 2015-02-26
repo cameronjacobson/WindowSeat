@@ -30,6 +30,7 @@ class CouchConfig
 		return array(
 			'parse_json'=> $this->config['parse_json'] ?: false,
 			'retrieve_docs'=> $this->config['retrieve_docs'] ?: false,
+			'thaw'=> $this->config['thaw'] ?: false,
 		);
 	}
 
