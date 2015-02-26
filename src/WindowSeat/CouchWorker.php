@@ -7,6 +7,7 @@ use \EventUtil;
 use \EventBufferEvent;
 use \Event;
 use \EventBuffer;
+use \Phreezer\Phreezer;
 
 class CouchWorker
 {
@@ -41,24 +42,24 @@ class CouchWorker
 	}
 
 	public function event($bev,$events,$base){
-        if(EventBufferEvent::READING & $events){
+		if(EventBufferEvent::READING & $events){
 			$buf = $bev->getInput();
 			if($buf->length > 0){
 				$this->response .= $buf->read($buf->length);
 			}
-        }
-        if(EventBufferEvent::WRITING & $events){
-        }
-        if(EventBufferEvent::EOF & $events){
+		}
+		if(EventBufferEvent::WRITING & $events){
+		}
+		if(EventBufferEvent::EOF & $events){
 			$this->processResponse();
-        }
-        if(EventBufferEvent::ERROR & $events){
+		}
+		if(EventBufferEvent::ERROR & $events){
 			error_log('ERROR: WindowSeat\CouchWorker '.EventUtil::getLastSocketError(),' '.EventUtil::getLastSocketErrno());
-        }
-        if(EventBufferEvent::TIMEOUT & $events){
-        }
-        if(EventBufferEvent::CONNECTED & $events){
-        }
+		}
+		if(EventBufferEvent::TIMEOUT & $events){
+		}
+		if(EventBufferEvent::CONNECTED & $events){
+		}
 	}
 
 	public function retrieveDoc(){
@@ -94,9 +95,21 @@ class CouchWorker
 	}
 
 	public function dispatch($event){
-		$ev = $this->ws->getEventHandler()->createEvent(
-			$this->ws->getInstructions()['parse_json'] ? json_decode($event,true) : $event
-		);
+		$instructions = $this->ws->getInstructions();
+		if($instructions['thaw'])
+			$event = json_decode($event,true);
+			$frozenObject = [
+				'root'=>$event['_id'],
+				'objects'=>[$event['_id']=>$event]
+			];
+			$object = Phreezer->thaw($frozenObject);
+			$ev = $this->ws->getEventHandler()->createEvent($object);
+		}
+		else{
+			$ev = $this->ws->getEventHandler()->createEvent(
+				$instructions['parse_json'] ? json_decode($event,true) : $event
+			);
+		}
 		$this->ws->dispatchEvent($ev);
 		$this->__destruct();
 	}
