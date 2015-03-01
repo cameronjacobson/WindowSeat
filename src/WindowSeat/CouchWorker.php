@@ -98,8 +98,8 @@ class CouchWorker
 		if(empty($event['id'])){
 			return;
 		}
-		$cb = function($obj){
-			$ev = $this->ws->getEventHandler()->createEvent($obj);
+		$cb = function($obj) use($event) {
+			$ev = $this->ws->getEventHandler()->createEvent($event['id'], $obj);
 			$this->ws->dispatchEvent($ev);
 			$this->__destruct();
 		};
@@ -118,8 +118,15 @@ class CouchWorker
 		if(empty($event)){
 			return;
 		}
+		if(empty($event['id']) && empty($event['_id'])){
+			return;
+		}
+		$parsed = json_decode($event, true);
+		$event_id = empty($parsed['id']) ? $parsed['_id'] : $parsed['id'];
+		$instructions = $this->ws->getInstructions();
 		$ev = $this->ws->getEventHandler()->createEvent(
-			$instructions['parse_json'] ? json_decode($event,true) : $event
+			$event_id,
+			$instructions['parse_json'] ? $parsed : $event
 		);
 		$this->ws->dispatchEvent($ev);
 		$this->__destruct();

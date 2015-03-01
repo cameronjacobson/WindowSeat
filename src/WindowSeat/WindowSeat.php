@@ -119,7 +119,8 @@ class WindowSeat
 					}
 					else{
 						$ev = $this->eventHandler->createEvent(
-							$this->instructions['parse_json'] ? $json : $data
+							$parsed['id'],
+							$this->instructions['parse_json'] ? $parsed : $data
 						);
 						$this->dispatchEvent($ev);
 					}

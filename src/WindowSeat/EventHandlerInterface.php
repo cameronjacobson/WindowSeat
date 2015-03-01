@@ -8,5 +8,5 @@ interface EventHandlerInterface
 {
 	public function handle(EventInterface $event);
 
-	public function createEvent($data = null);
+	public function createEvent($id, $data = null);
 }
