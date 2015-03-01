@@ -35,7 +35,7 @@ class CouchConfig
 	}
 
 	public function getDbName(){
-		return $this->config['dbname'];
+		return $this->config['database'];
 	}
 
 	public function &getBase(){
