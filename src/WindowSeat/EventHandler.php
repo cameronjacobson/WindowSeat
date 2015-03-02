@@ -4,7 +4,7 @@ namespace WindowSeat;
 
 use \WindowSeat\EventHandlerInterface;
 use \WindowSeat\EventInterface;
-use \WindowSeat\Event;
+use \WindowSeat\Event as WindowSeatEvent;
 
 class EventHandler implements EventHandlerInterface
 {
@@ -14,7 +14,7 @@ class EventHandler implements EventHandlerInterface
 		$this->sendToErrorLog($event->getEvent());
 	}
 	public function createEvent($id, $data = null){
-		return new Event($data);
+		return new WindowSeatEvent($data);
 	}
 	private function sendToErrorLog($data){
 		error_log(var_export($data,true));
